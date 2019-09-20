@@ -75,6 +75,17 @@ empty = HashMap []
 singleton :: k -> v -> HashMap k v
 singleton k v = HashMap [Bucket [(k, v)]]
 
+entries :: HashMap k v -> [(k, v)]
+entries = into
+
+keys :: HashMap k v -> [k]
+keys = map fst . entries
+
+values :: HashMap k v -> [v]
+values = map snd . entries
+
+
+
 instance Foldable (Bucket k) where
   foldr f acc (Bucket []      ) = acc
   foldr f acc (Bucket (x : xs)) = foldr f (f (snd x) acc) (Bucket xs)
@@ -86,4 +97,14 @@ instance Foldable (HashMap k) where
 instance (Eq k, Hashable k) => From (HashMap k v) [(k, v)] where
   from = foldl (\set (k, v) -> insert k v set) empty
 
+instance Into (Bucket k v) [(k, v)] where
+  into (Bucket []      ) = []
+  into (Bucket (x : xs)) = x : into (Bucket xs)
+
+instance Into (HashMap k v) [(k, v)] where
+  into (HashMap []      ) = []
+  into (HashMap (x : xs)) = into x ++ into (HashMap xs)
+
+instance (Eq k, Hashable k) => Functor (HashMap k) where
+  fmap f = from . map (fmap f) . entries
 
